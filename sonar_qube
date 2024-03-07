@@ -28,6 +28,12 @@ pipeline {
             }
         }
 
+-------------------------------------------------------------------------------------------------------------------------------------------
+            environment {
+                SONAR_URL = 'https://sonarcloud.io/'
+                PROJECT_KEY= 'sonarscan0_myproject'
+                organization= 'sonarscan0'
+            }
 
 
         steps{
@@ -35,7 +41,7 @@ pipeline {
                sh 'mvn clean package sonar:sonar -Dsonar.token=$TOKEN -Dsonar.projectKey=$PROJECT_KEY -Dsonar.host.url=$SONAR_URL -Dsonar.organization=$organization'
                 }
         }
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
         // steps{
         //     // performing sonarqube analysis with "withSonarQubeENV(<Name of Server configured in Jenkins>)"
         //         withSonarQubeEnv('sonarqube') {
@@ -45,7 +51,7 @@ pipeline {
             
         // }
 
-
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         stage('reporting') {
             steps {
                 junit testResults: '**/target/surefire-reports/TEST-*.xml'
