@@ -29,6 +29,23 @@ pipeline {
         }
 
 
+
+        steps{
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'TOKEN')]) {
+               sh 'mvn clean package sonar:sonar -Dsonar.token=$TOKEN -Dsonar.projectKey=$PROJECT_KEY -Dsonar.host.url=$SONAR_URL -Dsonar.organization=$organization'
+                }
+        }
+
+        // steps{
+        //     // performing sonarqube analysis with "withSonarQubeENV(<Name of Server configured in Jenkins>)"
+        //         withSonarQubeEnv('sonarqube') {
+        //         // requires SonarQube Scanner for Maven 3.2+
+        //             sh 'mvn clean package sonar:sonar -Dsonar.organization=sonarscan0 -Dsonar.token=78e792ed3f8887990605edeffc88aa6386a53ab2 -Dsonar.projectKey=sonarscan0_myproject'
+        // }
+            
+        // }
+
+
         stage('reporting') {
             steps {
                 junit testResults: '**/target/surefire-reports/TEST-*.xml'
