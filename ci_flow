@@ -1,0 +1,106 @@
+pipeline {
+    agent {
+        label  'label1'
+    }
+    tools {
+        maven 'maven_3.9' 
+        jfrog 'JFROG_CLI'
+    }
+
+ 
+    stages {
+        stage('checkout') {
+            
+            steps {
+                // Get some code from a GitHub repository
+                git credentialsId: 'GITHUB_ID' ,
+                    branch: 'master',
+                    url: 'https://github.com/sangamesh001/privaterepo.git'
+            }
+
+        }
+        
+        stage('build'){
+            steps{
+            
+            sh script : 'mvn package'
+            }
+        }
+        
+        stage('unit test'){
+            steps{
+            
+            junit  testResults : '**/surefire-reports/TEST-*.xml'
+            }
+        }
+        
+        
+         stage('sonaranalysis'){
+
+            environment {
+                SONAR_URL = 'https://sonarcloud.io/'
+                PROJECT_KEY= 'sonarscan0_myproject'
+                organization= 'sonarscan0'
+            }
+            steps{
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'TOKEN')]) {
+               sh 'mvn clean package sonar:sonar -Dsonar.token=$TOKEN -Dsonar.projectKey=$PROJECT_KEY -Dsonar.host.url=$SONAR_URL -Dsonar.organization=$organization'
+                }
+            }
+         }
+         
+            // steps{
+        //     // performing sonarqube analysis with "withSonarQubeENV(<Name of Server configured in Jenkins>)"
+        //         withSonarQubeEnv('sonarqube') {
+        //         // requires SonarQube Scanner for Maven 3.2+
+        //             sh 'mvn clean package sonar:sonar -Dsonar.organization=sonarscan0 -Dsonar.token=78e792ed3f8887990605edeffc88aa6386a53ab2 -Dsonar.projectKey=sonarscan0_myproject'
+        // }
+            
+        // }
+       
+        stage(configure_jfrog){
+            steps{
+                jf 'mvn-config --repo-resolve-releases libs-release --repo-resolve-snapshots libs-snapshots --repo-deploy-releases libs-release-local --repo-deploy-snapshots libs-snapshot-local'
+                jf 'mvn clean install'
+            }
+        }
+
+        stage('Publish build info') {
+            steps {
+                jf 'rt build-publish'
+                
+            }
+        }
+        
+         stage('download artifact') {
+            steps {
+                jf 'rt dl libs-snapshot-local/  gheware/'
+               
+            }   
+
+        }
+        
+        
+        stage('stash'){
+            steps {
+                dir('gheware/com/bt/cdo/supermarket/tdd-supermarket/1.0.0-SNAPSHOT'){
+                     stash name: 'files' ,
+                      includes: '*.jar'
+                }
+            }
+        }
+
+        stage(unstash){
+            steps{
+                 dir('prasad'){
+                    unstash name: 'files'
+
+            }
+            }
+           
+        }      
+    }
+}
+        
+        
+        
