@@ -1,7 +1,6 @@
+
 pipeline {
-    agent {
-        label  'label1'
-    }
+    agent any 
     tools {
         maven 'maven_3.9' 
         jfrog 'JFROG_CLI'
@@ -10,6 +9,9 @@ pipeline {
  
     stages {
         stage('checkout') {
+            agent {
+            label  'label1'
+            }   
             
             steps {
                 // Get some code from a GitHub repository
@@ -21,6 +23,9 @@ pipeline {
         }
         
         stage('build'){
+            agent {
+            label  'label1'
+            }   
             steps{
             
             sh script : 'mvn package'
@@ -28,6 +33,9 @@ pipeline {
         }
         
         stage('unit test'){
+            agent {
+            label  'label1'
+           }   
             steps{
             
             junit  testResults : '**/surefire-reports/TEST-*.xml'
@@ -36,6 +44,9 @@ pipeline {
         
         
          stage('sonaranalysis'){
+             agent {
+            label  'label1'
+           }   
 
             environment {
                 SONAR_URL = 'https://sonarcloud.io/'
@@ -59,6 +70,9 @@ pipeline {
         // }
        
         stage(configure_jfrog){
+            agent {
+            label  'label1'
+           }   
             steps{
                 jf 'mvn-config --repo-resolve-releases libs-release --repo-resolve-snapshots libs-snapshots --repo-deploy-releases libs-release-local --repo-deploy-snapshots libs-snapshot-local'
                 jf 'mvn clean install'
@@ -66,6 +80,9 @@ pipeline {
         }
 
         stage('Publish build info') {
+            agent {
+            label  'label1'
+           }   
             steps {
                 jf 'rt build-publish'
                 
@@ -73,6 +90,9 @@ pipeline {
         }
         
          stage('download artifact') {
+            agent {
+            label  'label1'
+           }   
             steps {
                 jf 'rt dl libs-snapshot-local/  gheware/'
                
@@ -82,6 +102,9 @@ pipeline {
         
         
         stage('stash'){
+            agent {
+            label  'label1'
+           }   
             steps {
                 dir('gheware/com/bt/cdo/supermarket/tdd-supermarket/1.0.0-SNAPSHOT'){
                      stash name: 'files' ,
@@ -90,17 +113,42 @@ pipeline {
             }
         }
 
-        stage(unstash){
+        stage('unstash'){
+            agent {
+            label  'label2'
+           }   
             steps{
-                 dir('prasad'){
+                 dir('/home/ansible'){
                     unstash name: 'files'
 
-            }
+                }
             }
            
-        }      
+        } 
+        stage('deploy_application'){
+            agent {
+            label  'label2'
+           } 
+           steps{
+            sh script: 'ansible-playbook -i hosts playbook.yaml'
+           }
+        }   
     }
 }
         
         
         
+        
+                
+        
+        
+
+    
+
+
+
+
+
+
+
+
